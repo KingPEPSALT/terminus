@@ -1,0 +1,72 @@
+html, body{
+    width:calc(100%-16px);
+}
+body{ 
+    background: #000;  
+    color: #fafafa;
+    font-family: 'Lucida Console';
+
+}
+
+#cursor{
+    color:#fafafa;
+}
+
+.cmd{
+    font-weight:600;
+    color:#00ca00;
+}
+
+.dir{
+    font-weight:600;
+    color: #00f5f5;
+}
+
+.file{
+    color: rgb(255, 154, 247)
+}
+
+#edit-panel{
+    display:none;
+    position:absolute;
+    width:75%;
+    height: 75%;
+    top:12.5%;
+    left:12.5%;
+    border:#fafafa 1px solid;
+    flex-direction:column;
+    justify-content: center;
+    align-items: center;
+}
+#edit-file{
+    resize:none;
+    width:100%;
+    border:none;
+    border-bottom:#fafafa 1px solid;
+    height:90%;
+    padding:0;
+    margin:0;
+    background:#000;
+    outline:none;
+    color:#fafafa;
+    font-size:16px;
+}
+#button-area{
+    display:flex;
+    flex-direction:row;
+    justify-content: center;
+    align-items: center;
+    gap:0.6em;
+    height:10%;
+}
+.file-button{
+    padding:10px;
+    margin:0;
+    border:#fafafa 1px solid;
+    background:#000;
+    color:#fafafa;
+    font-family: 'Lucida Console';
+}
+.file-button:hover{
+    cursor:pointer;
+}

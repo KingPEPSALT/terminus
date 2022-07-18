@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>terminus</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="start-info">
+        PepsaltShell v0.1.3 Copyright (c) Pepsalt.
+        <br>
+        <br>
+        Loading took <span id="load-time"></span>ms.
+        <br>
+        <br>
+        Type <span class="cmd">help</span> to get help.
+    </div>
+    <br>
+    <div id="inputs">
+        <div id="history"></div>
+        <div id="input-line">$ <span id="typed-before"></span><span id="cursor">|</span><span id="typed-after"></span></div>
+    </div>
+    <div id="edit-panel">
+        <textarea id="edit-file"></textarea>
+        <div id="button-area">
+            <input type="button" value="write file" onclick="save_file()" class="file-button">
+            <input type="button" value="close file" onclick="close_file()" class="file-button">
+        </div>
+    </div>
+    <script src="script.js" type="text/javascript" defer></script>
+</body>
+</html>
