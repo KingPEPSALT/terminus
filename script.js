@@ -13,8 +13,8 @@ window.onload = ()=>{
 };
 
 
-const filename_regex = /^[a-zA-Z0-9_\-*()£$!?]+\.[a-zA-Z0-9]+$/
-const dirname_regex = /^[a-zA-Z0-9_\-*()£$!?]+$/
+const filename_regex = /^[a-zA-Z0-9_\-()£$!]+(\.[a-zA-Z0-9]+){0,1}$/
+const dirname_regex = /^[a-zA-Z0-9_\-()£$!.]+$/
 
 class FileSystemObject{
     constructor(name, parent, permissions){
@@ -101,6 +101,16 @@ class FileObj extends FileSystemObject{
     }
 }
 
+class Command{
+    constructor(name, func, description, requires_args=false, man_page = undefined){
+        this.name = name;
+        this.func = func;
+        this.description = description;
+        this.requires_args = requires_args;
+        this.man_page = man_page;
+    }
+}
+
 const root = new Directory("~", [                    
     new Directory("articles", [new FileObj("about.txt", "All about me!", undefined, ['EDIT']), new FileObj("this.txt", "All about this...", undefined, ['EDIT'])]),
     new FileObj("changelog.txt",
@@ -139,52 +149,59 @@ let current_file = null;
 let phone_focused = false
 
 let command_list = new Map([
-    ["echo",(x)=>x.join(" ")],
-    ["clear",()=>document.getElementById("history").innerHTML=""],
-    ["ls",(x)=>{
-        if(x.join(" ").trim().length == 0) return current_dir.display();
+
+    ["echo", new Command("echo", (args)=>{return args.join(" ")}, "outputs the input")],
+
+    ["clear", new Command("clear", (args)=>{document.getElementById("history").innerHTML=""}, "clears the terminal")],
+
+    ["ls", new Command("ls", (args)=>{
+        if(args.join(" ").trim().length == 0) return current_dir.display();
         else{
-            let dir = current_dir.from_path(x[0]);
+            let dirname = args.shift();
+            let dir = current_dir.from_path(dirname);
             if (dir instanceof Directory) return dir.display();
-            return "Could not find folder '"+x[0]+"'";
+            return "Could not find folder '"+dirname+"'";
         }
-    }],
-    ["cat",(x)=>{
-        if(x.join(" ").trim().length == 0) return "A filename must be given.";
-        let file = current_dir.from_path(x[0]);
+    }, "lists objects in a directory")],
+
+    ["cat", new Command("cat", (args)=>{
+        let filename = args.shift();
+        let file = current_dir.from_path(filename);
         if (file instanceof FileObj) return file.content; 
-        return "Could not find file '"+x[0]+"'";
-    }],
-    ["cd",(x)=>{
-        if(x.join(" ").trim().length == 0) return "";
-        let dir = current_dir.from_path(x[0]);
+        return "Could not find file '"+filename+"'";
+    }, "outputs a file with styling to the terminal", true)],
+
+    ["cd", new Command("cd", (args)=>{
+        if(args.join(" ").trim().length == 0) return "";
+        let dirname = args.shift();
+        let dir = current_dir.from_path(dirname);
         if (dir instanceof Directory) current_dir = dir;
-        else return "Could not find folder '"+x[0]+"'";
+        else return "Could not find folder '"+dirname+"'";
         return "";
-    }],
-    ["mk",(x)=>{
-        if(x.join(" ").trim().length == 0) return "A directory name must be given.";
-        let dirname = x[0]
-        let obj = current_dir.from_path(x[0], true);
-        if (!obj) return x[0].split("/").pop().join("/")+" could not be resolved as a directory.";
+    }, "changes the current directory")],
+
+    ["mk", new Command("mk", (args)=>{
+        let dirname = args.shift();
+        let obj = current_dir.from_path(dirname, true);
+        if (!obj) return dirname.split("/").pop().join("/")+" could not be resolved as a directory.";
         if (obj[1] != undefined) dirname = obj[1];
         if (!dirname_regex.test(dirname)) return "Invalid directory name.";
         if (obj[0].find(obj[1])) return "An object, " + obj[0].find(obj[1]).show() + ", already exists.";
         return "Directory " + obj[0].add(new Directory(dirname, undefined, undefined, ['DELETE', 'MOVE'])).show() + " successfully created";
-    }],
-    ["new",(x)=>{
-        if(x.join(" ").trim().length == 0) return "A filename must be given.";
-        let filename = x[0];
-        let obj = current_dir.from_path(x[0], true);
-        if (!obj) return x[0].split("/").pop().join("/")+" could not be resolved as a directory.";
+    }, "creates a new directory", true)],
+
+    ["new", new Command("new", (args)=>{
+        let filename = args.shift();
+        let obj = current_dir.from_path(filename, true);
+        if (!obj) return filename.split("/").pop().join("/")+" could not be resolved as a directory.";
         if (obj[1] != undefined) filename = obj[1];
         if (!filename_regex.test(filename)) return "Invalid file name.";
         if (obj[0].find(obj[1])) return "An object, " + obj[0].find(obj[1]).show() + ", already exists";
         return "file " + obj[0].add(new FileObj(obj[1], undefined, undefined, ['EDIT', 'DELETE', 'MOVE'])).show() + " successfully created."
-    }],
-    ["edit",(x)=>{
-        if(x.join(" ").trim().length == 0) return "A filename must be given.";
-        let filename = x.shift();
+    }, "creates a new file", true)],
+
+    ["edit", new Command("edit", (args)=>{
+        let filename = args.shift();
         let file = current_dir.from_path(filename);
         if (!(file instanceof FileObj)) return "Could not find file '"+filename+"'";
         current_file = file; editing_file = true;
@@ -195,10 +212,10 @@ let command_list = new Map([
         else document.getElementById("write-btn").style.display = "inherit";
         document.getElementById("edit-dialogue").focus();
         return "";
-    }],
-    ["code",(x)=>{
-        if(x.join(" ").trim().length == 0) return "A filename must be given.";
-        let filename = x.shift();
+    }, "opens an existing file in an edit window with styling", true)],
+
+    ["code", new Command("code", (args)=>{
+        let filename = args.shift();
         let file = current_dir.from_path(filename);
         if (!(file instanceof FileObj)) return "Could not find file '"+filename+"'";
         current_file = file; editing_file = true;
@@ -209,17 +226,18 @@ let command_list = new Map([
         else document.getElementById("write-btn-code").style.display = "inherit";
         document.getElementById("code-dialogue").focus();
         return ""; 
-    }],
-    ["rm",(x)=>{
-        if(x.join(" ").trim().length == 0) return "A file/directory name must be given.";
-        let filename = x.shift();
+    }, "opens an existing file in an edit window without styling, source is shown", true)],
+
+    ["rm", new Command("rm", (args)=>{
+        let filename = args.shift();
         let file = current_dir.from_path(filename);
         if(!file) "Could not find file/directory '"+filename+"'";
         if(!file.permissions.includes("DELETE")) return "You do not have permission to delete " + file.show() + ".";
         idx = file.parent.subdirectories.findIndex(el=>el.name==file.name);
         file.parent.subdirectories.splice(idx, 1);
         return "Successfully deleted " + file.show() + ".";
-    }]
+    }, "deletes on object from the file system.", true)]
+
 ]);
 
 /*ON-CLICK FUNCS*/
@@ -252,24 +270,36 @@ document.addEventListener('keydown', (e)=>{
     if (editing_file) return;
     if (e.key == "Enter") {
         let inp = (in_before.innerHTML+in_after.innerHTML).trim().split(" ");
-        let command = inp.shift();
-        document.getElementById("history").innerHTML+= "<span class=\"dir\">"+current_dir.path() + "</span> $ " + command + " " + inp.join(" ")
+        let typed_command = inp.shift();
+        let command = command_list.get(typed_command);
+        document.getElementById("history").innerHTML+= "<span class='dir'>"+current_dir.path() + "</span> $ " + typed_command + " " + inp.join(" ")
         let output = "";
-        if (command_list.get(command) == undefined && command!="help" && command!="") output = "'" + command + "' is not a valid command. Type <span class=\"cmd\">help</span> for a list of commands.";
-        else if (command=="help") {
-            output = "List of commands:<br><br><span class=\"cmd\">help</span>";
-            for(const key of command_list.keys()){
-                output += "<br><span class=\"cmd\">"+key+"</span>";
+        if (command == undefined && typed_command != "help" && typed_command!="") output = "'" + typed_command + "' is not a valid command. Type <span class='cmd'>help</span> for a list of commands.";
+        else if (typed_command=="help") {
+            let specified_cmd = inp.shift();
+            if(specified_cmd == undefined){
+                output = "List of commands:<br><br><span class='cmd'>help</span>";
+                for(const cmd of command_list.values()){
+                    output += "<br><span class='cmd'>"+cmd.name+"</span>";
+                }
+                output +="<br><br> Type <span class='cmd'>help</span> [command name] for a brief description of a command"
+            }else{
+                let elaborated_cmd = command_list.get(specified_cmd);
+                if(elaborated_cmd == undefined)
+                    output = "That is not a valid command. Type <span class='cmd'>help</span> [command name] for a brief description of a command or <span class='cmd'>help</span> for a list of commands.";
+                else output = "<span class='cmd'>"+elaborated_cmd.name+"</span> - " + elaborated_cmd.description;
             }
-        }else if(command==""){
+        }else if(typed_command == ""){
             output="";
         }
-        else output = command_list.get(command)(inp)
-        if (command != "clear") document.getElementById("history").innerHTML += "<br>" + output + (output.length==0 ? "":"<br>") + "<br>";
-        in_before.innerHTML="";
-        in_after.innerHTML="";
+        else{
+            if(command.requires_args && inp.join(" ").trim().length == 0) output = "Command <span class='cmd'>"+command.name+"</span> requires args. Type <span class='cmd'>help</span> "+command.name+" for more info.";
+            else output = command.func(inp);
+        }
+        if (typed_command != "clear") document.getElementById("history").innerHTML += "<br>" + output + (output.length==0 ? "":"<br>") + "<br>";
+        in_before.innerHTML=""; in_after.innerHTML="";
         document.getElementById("cur-dir").innerHTML = current_dir.path();
-        last_command = command
+        last_command = command;
         if(inp != "") last_command += " " + inp;
     }
     else if (e.key == "Backspace"){
