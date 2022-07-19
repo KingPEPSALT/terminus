@@ -65,7 +65,7 @@ body{
 
 .edit-panel{
     display:none;
-    position:absolute;
+    position:fixed;
     width:75%;
     height: 75%;
     top:12.5%;
@@ -94,6 +94,7 @@ body{
     align-items: center;
     gap:0.6em;
     height:10%;
+    background-color: #000;
 }
 
 .file-button{
