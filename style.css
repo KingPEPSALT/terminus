@@ -4,10 +4,26 @@ html, body{
 body{ 
     background: #000;  
     color: #fafafa;
-    font-family: 'Lucida Console';
+    font-family: 'Lucida Console', monospace;
 
 }
-
+#poppy-cult{
+    color: #fff;
+    text-align: center;
+    -webkit-animation: glow 1s ease-in-out infinite alternate;
+    -moz-animation: glow 1s ease-in-out infinite alternate;
+    animation: glow 1s ease-in-out infinite alternate;
+    filter:saturate(5);
+    font-weight:bold;
+}
+@keyframes glow {
+    from {
+      text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #ac0000, 0 0 40px #ac0000, 0 0 50px #ac0000, 0 0 60px #ac0000, 0 0 70px #ac0000;
+    }
+    to {
+      text-shadow: 0 0 20px #fff, 0 0 30px #ffffff, 0 0 40px #e41b1b, 0 0 50px #e41b1b, 0 0 60px #e41b1b, 0 0 70px #e41b1b, 0 0 80px #e41b1b;
+    }
+  }
 #crt-filter{
     opacity:0.5;
     position: fixed;

@@ -69,8 +69,8 @@ class Directory extends FileSystemObject{
     }
 
     from_path(path, to_make = false){
+        if(path == undefined) return null;
         path = path.trim();
-
         let cursor = this;
         if (path.startsWith("~")) cursor = root;
         let arr_path = path.split("/");
@@ -87,6 +87,7 @@ class Directory extends FileSystemObject{
             if (next instanceof FileObj) return null;
             cursor = next;
         }
+        if (cursor === null) return null;
         if (to_make) return [cursor, target];
         else return cursor.find(target)
     }
@@ -106,6 +107,7 @@ class FileObj extends FileSystemObject{
 const root = new Directory("~", [                    
     new Directory("documents", [new FileObj("about.txt", "All about me!"), new FileObj("this.txt", "All about this...")]),
     new FileObj("changelog.txt", "\
+        <strong>patch v0.1.7</strong><br>Fixed some bugs with file paths with help from the members of <span id='poppy-cult'>Poppy's Cult</span><br><br><br>\
         <strong>patch v0.1.6</strong><br>File path's now added! Try: <span class=\"cmd\">edit</span> documents/about.txt!<br><br><br>\
         <strong>patch v0.1.5</strong><br>CRT filter added! Looks neat!<br><br><br>\
         <strong>patch v0.1.4</strong><br>Github! Now hosted on github pages!<br><br><br>\
@@ -119,6 +121,8 @@ const root = new Directory("~", [
 let current_dir = root;
 let editing_file = false;
 let current_file = null;
+let phone_focused = false
+
 let command_list = {
     "echo":(x)=>x.join(" "),
     "clear":()=>document.getElementById("history").innerHTML="",
@@ -136,6 +140,7 @@ let command_list = {
         return "could not find file '"+x[0]+"'";
     },
     "cd":(x)=>{
+        if(x[0]==undefined) return "";
         let dir = current_dir.from_path(x[0]);
         if (dir instanceof Directory) current_dir = dir;
         else return "could not find folder '"+x[0]+"'";
@@ -169,9 +174,11 @@ let command_list = {
         document.getElementById("edit-file").value = file.content;
         document.getElementById("edit-file").focus();
         return "";
-    }
+    },
     
 }
+
+/*ON-CLICK FUNCS*/
 function close_file(){
     editing_file = false;
     current_file = null;
@@ -185,9 +192,14 @@ function save_file(){
     current_file = null;
 }
 
+function phonefocus(){
+    if (phone_focused) document.getElementById("phone-focus").blur()
+    else document.getElementById("phone-focus").focus()
+}
+
 let in_before = document.getElementById("typed-before");
 let in_after = document.getElementById("typed-after");
-let current_command = ""
+let last_command = ""
 document.addEventListener('keydown', (e)=>{
     if (editing_file) return;
     if (e.key == "Enter") {
@@ -195,18 +207,22 @@ document.addEventListener('keydown', (e)=>{
         let command = inp.shift();
         document.getElementById("history").innerHTML+= "<span class=\"dir\">"+current_dir.path() + "</span> $ " + command + " " + inp.join(" ")
         let output = "";
-        if (command_list[command] == undefined && command!="help") output = "'" + command + "' is not a valid command. Type <span class=\"cmd\">help</span> for a list of commands.";
+        if (command_list[command] == undefined && command!="help" && command!="") output = "'" + command + "' is not a valid command. Type <span class=\"cmd\">help</span> for a list of commands.";
         else if (command=="help") {
             output = "List of commands:<br><br><span class=\"cmd\">help</span>";
             for(const key of Object.keys(command_list)){
                 output += "<br><span class=\"cmd\">"+key+"</span>";
             }
+        }else if(command==""){
+            output="";
         }
         else output = command_list[command](inp)
         if (command != "clear") document.getElementById("history").innerHTML += "<br>" + output + (output.length==0 ? "":"<br>") + "<br>";
         in_before.innerHTML="";
         in_after.innerHTML="";
         document.getElementById("cur-dir").innerHTML = current_dir.path();
+        last_command = command
+        if(inp != "") last_command += " " + inp;
     }
     else if (e.key == "Backspace"){
         in_before.innerHTML = in_before.innerHTML.slice(0, in_before.innerHTML.length-1);
@@ -221,5 +237,9 @@ document.addEventListener('keydown', (e)=>{
         let to_move = in_before.innerHTML.charAt(in_before.innerHTML.length-1);
         in_before.innerHTML = in_before.innerHTML.slice(0, in_before.innerHTML.length-1);
         in_after.innerHTML = to_move + in_after.innerHTML;
-    };
+    }
+    else if (e.key == "ArrowUp"){
+        in_before.innerHTML = last_command;
+        in_after.innerHTML = "";
+    }
 })
