@@ -140,7 +140,6 @@ const root = new Directory("~", [
     
 <strong>patch v0.1.0</strong><br>Basic filesystem created and traversable, use the <span class="cmd">cat, cd</span> and <span class="cmd">ls</span> commands to traverse!`,
     undefined, ['DELETE']),
-    new Directory("pictures", [new FileObj("kitten.jpg", "Images aren't supported rn :(")])
 ], null);
 
 let current_dir = root;
@@ -267,6 +266,7 @@ let in_before = document.getElementById("typed-before");
 let in_after = document.getElementById("typed-after");
 let last_command = ""
 document.addEventListener('keydown', (e)=>{
+    if (e.key == "/") e.preventDefault();
     if (editing_file) return;
     if (e.key == "Enter") {
         let inp = (in_before.innerHTML+in_after.innerHTML).trim().split(" ");
