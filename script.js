@@ -266,7 +266,7 @@ let in_before = document.getElementById("typed-before");
 let in_after = document.getElementById("typed-after");
 let last_command = ""
 document.addEventListener('keydown', (e)=>{
-    if (e.key == "/") e.preventDefault();
+    if (["/", "'"].includes(e.key)) e.preventDefault();
     if (editing_file) return;
     if (e.key == "Enter") {
         let inp = (in_before.innerHTML+in_after.innerHTML).trim().split(" ");
