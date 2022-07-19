@@ -1,5 +1,6 @@
 html, body{
     width:calc(100%-16px);
+    height:calc(100%-16px);
 }
 body{ 
     background: #000;  

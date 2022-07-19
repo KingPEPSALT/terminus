@@ -108,7 +108,7 @@ const root = new Directory("~", [
     new Directory("documents", [new FileObj("about.txt", "All about me!"), new FileObj("this.txt", "All about this...")]),
     new FileObj("changelog.txt", "\
         <strong>patch v0.1.7</strong><br>Fixed some bugs with file paths with help from the members of <span id='poppy-cult'>Poppy's Cult</span><br><br><br>\
-        <strong>patch v0.1.6</strong><br>File path's now added! Try: <span class=\"cmd\">edit</span> documents/about.txt!<br><br><br>\
+        <strong>patch v0.1.6</strong><br>File paths now added! Try: <span class=\"cmd\">edit</span> documents/about.txt!<br><br><br>\
         <strong>patch v0.1.5</strong><br>CRT filter added! Looks neat!<br><br><br>\
         <strong>patch v0.1.4</strong><br>Github! Now hosted on github pages!<br><br><br>\
         <strong>patch v0.1.3</strong><br>Big update! Removed the command <span class=\"cmd\">inp</span> for the way better command <span class=\"cmd\">edit</span><br><br><br>\
@@ -195,8 +195,8 @@ function save_file(){
 function phonefocus(){
     if (phone_focused) document.getElementById("phone-focus").blur()
     else document.getElementById("phone-focus").focus()
+    phone_focused = !phone_focused;
 }
-
 let in_before = document.getElementById("typed-before");
 let in_after = document.getElementById("typed-after");
 let last_command = ""
