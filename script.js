@@ -142,7 +142,7 @@ let command_list = new Map([
     ["echo",(x)=>x.join(" ")],
     ["clear",()=>document.getElementById("history").innerHTML=""],
     ["ls",(x)=>{
-        if(x.length == 0) return current_dir.display();
+        if(x.join(" ").trim().length == 0) return current_dir.display();
         else{
             let dir = current_dir.from_path(x[0]);
             if (dir instanceof Directory) return dir.display();
@@ -150,18 +150,20 @@ let command_list = new Map([
         }
     }],
     ["cat",(x)=>{
+        if(x.join(" ").trim().length == 0) return "A filename must be given.";
         let file = current_dir.from_path(x[0]);
         if (file instanceof FileObj) return file.content; 
         return "Could not find file '"+x[0]+"'";
     }],
     ["cd",(x)=>{
-        if(x[0]==undefined) return "";
+        if(x.join(" ").trim().length == 0) return "";
         let dir = current_dir.from_path(x[0]);
         if (dir instanceof Directory) current_dir = dir;
         else return "Could not find folder '"+x[0]+"'";
         return "";
     }],
     ["mk",(x)=>{
+        if(x.join(" ").trim().length == 0) return "A directory name must be given.";
         let dirname = x[0]
         let obj = current_dir.from_path(x[0], true);
         if (!obj) return x[0].split("/").pop().join("/")+" could not be resolved as a directory.";
@@ -171,6 +173,7 @@ let command_list = new Map([
         return "Directory " + obj[0].add(new Directory(dirname, undefined, undefined, ['DELETE', 'MOVE'])).show() + " successfully created";
     }],
     ["new",(x)=>{
+        if(x.join(" ").trim().length == 0) return "A filename must be given.";
         let filename = x[0];
         let obj = current_dir.from_path(x[0], true);
         if (!obj) return x[0].split("/").pop().join("/")+" could not be resolved as a directory.";
@@ -180,7 +183,7 @@ let command_list = new Map([
         return "file " + obj[0].add(new FileObj(obj[1], undefined, undefined, ['EDIT', 'DELETE', 'MOVE'])).show() + " successfully created."
     }],
     ["edit",(x)=>{
-        if(x.length == 0) return "A filename is required.";
+        if(x.join(" ").trim().length == 0) return "A filename must be given.";
         let filename = x.shift();
         let file = current_dir.from_path(filename);
         if (!(file instanceof FileObj)) return "Could not find file '"+filename+"'";
@@ -194,7 +197,7 @@ let command_list = new Map([
         return "";
     }],
     ["code",(x)=>{
-        if(x.length == 0) return "A filename is required.";
+        if(x.join(" ").trim().length == 0) return "A filename must be given.";
         let filename = x.shift();
         let file = current_dir.from_path(filename);
         if (!(file instanceof FileObj)) return "Could not find file '"+filename+"'";
@@ -208,7 +211,7 @@ let command_list = new Map([
         return ""; 
     }],
     ["rm",(x)=>{
-        if(x.length == 0) return "A file/directory name is required.";
+        if(x.join(" ").trim().length == 0) return "A file/directory name must be given.";
         let filename = x.shift();
         let file = current_dir.from_path(filename);
         if(!file) "Could not find file/directory '"+filename+"'";
@@ -261,7 +264,7 @@ document.addEventListener('keydown', (e)=>{
         }else if(command==""){
             output="";
         }
-        else output = command_list[command](inp)
+        else output = command_list.get(command)(inp)
         if (command != "clear") document.getElementById("history").innerHTML += "<br>" + output + (output.length==0 ? "":"<br>") + "<br>";
         in_before.innerHTML="";
         in_after.innerHTML="";
