@@ -86,6 +86,8 @@ body{
     outline:none;
     color:#fafafa;
     font-size:16px;
+    overflow-y:scroll;
+    word-wrap: break-word;
 }
 .button-area{
     display:flex;
