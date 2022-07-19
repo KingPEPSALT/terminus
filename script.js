@@ -138,30 +138,30 @@ let editing_file = false;
 let current_file = null;
 let phone_focused = false
 
-let command_list = {
-    "echo":(x)=>x.join(" "),
-    "clear":()=>document.getElementById("history").innerHTML="",
-    "ls":(x)=>{
+let command_list = new Map([
+    ["echo",(x)=>x.join(" ")],
+    ["clear",()=>document.getElementById("history").innerHTML=""],
+    ["ls",(x)=>{
         if(x.length == 0) return current_dir.display();
         else{
             let dir = current_dir.from_path(x[0]);
             if (dir instanceof Directory) return dir.display();
             return "Could not find folder '"+x[0]+"'";
         }
-    },
-    "cat":(x)=>{
+    }],
+    ["cat",(x)=>{
         let file = current_dir.from_path(x[0]);
         if (file instanceof FileObj) return file.content; 
         return "Could not find file '"+x[0]+"'";
-    },
-    "cd":(x)=>{
+    }],
+    ["cd",(x)=>{
         if(x[0]==undefined) return "";
         let dir = current_dir.from_path(x[0]);
         if (dir instanceof Directory) current_dir = dir;
         else return "Could not find folder '"+x[0]+"'";
         return "";
-    },
-    "mk":(x)=>{
+    }],
+    ["mk",(x)=>{
         let dirname = x[0]
         let obj = current_dir.from_path(x[0], true);
         if (!obj) return x[0].split("/").pop().join("/")+" could not be resolved as a directory.";
@@ -169,8 +169,8 @@ let command_list = {
         if (!dirname_regex.test(dirname)) return "Invalid directory name.";
         if (obj[0].find(obj[1])) return "An object, " + obj[0].find(obj[1]).show() + ", already exists.";
         return "Directory " + obj[0].add(new Directory(dirname, undefined, undefined, ['DELETE', 'MOVE'])).show() + " successfully created";
-    },
-    "new":(x)=>{
+    }],
+    ["new",(x)=>{
         let filename = x[0];
         let obj = current_dir.from_path(x[0], true);
         if (!obj) return x[0].split("/").pop().join("/")+" could not be resolved as a directory.";
@@ -178,8 +178,8 @@ let command_list = {
         if (!filename_regex.test(filename)) return "Invalid file name.";
         if (obj[0].find(obj[1])) return "An object, " + obj[0].find(obj[1]).show() + ", already exists";
         return "file " + obj[0].add(new FileObj(obj[1], undefined, undefined, ['EDIT', 'DELETE', 'MOVE'])).show() + " successfully created."
-    },
-    "edit":(x)=>{
+    }],
+    ["edit",(x)=>{
         if(x.length == 0) return "A filename is required.";
         let filename = x.shift();
         let file = current_dir.from_path(filename);
@@ -192,8 +192,8 @@ let command_list = {
         else document.getElementById("write-btn").style.display = "inherit";
         document.getElementById("edit-dialogue").focus();
         return "";
-    },
-    "code":(x)=>{
+    }],
+    ["code",(x)=>{
         if(x.length == 0) return "A filename is required.";
         let filename = x.shift();
         let file = current_dir.from_path(filename);
@@ -206,8 +206,8 @@ let command_list = {
         else document.getElementById("write-btn-code").style.display = "inherit";
         document.getElementById("code-dialogue").focus();
         return ""; 
-    },
-    "rm":(x)=>{
+    }],
+    ["rm",(x)=>{
         if(x.length == 0) return "A file/directory name is required.";
         let filename = x.shift();
         let file = current_dir.from_path(filename);
@@ -216,9 +216,8 @@ let command_list = {
         idx = file.parent.subdirectories.findIndex(el=>el.name==file.name);
         file.parent.subdirectories.splice(idx, 1);
         return "Successfully deleted " + file.show() + ".";
-    }
-    
-}
+    }]
+]);
 
 /*ON-CLICK FUNCS*/
 function close_file(){
@@ -253,10 +252,10 @@ document.addEventListener('keydown', (e)=>{
         let command = inp.shift();
         document.getElementById("history").innerHTML+= "<span class=\"dir\">"+current_dir.path() + "</span> $ " + command + " " + inp.join(" ")
         let output = "";
-        if (command_list[command] == undefined && command!="help" && command!="") output = "'" + command + "' is not a valid command. Type <span class=\"cmd\">help</span> for a list of commands.";
+        if (command_list.get(command) == undefined && command!="help" && command!="") output = "'" + command + "' is not a valid command. Type <span class=\"cmd\">help</span> for a list of commands.";
         else if (command=="help") {
             output = "List of commands:<br><br><span class=\"cmd\">help</span>";
-            for(const key of Object.keys(command_list)){
+            for(const key of command_list.keys()){
                 output += "<br><span class=\"cmd\">"+key+"</span>";
             }
         }else if(command==""){
