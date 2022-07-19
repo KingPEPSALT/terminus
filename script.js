@@ -11,12 +11,6 @@ window.onload = ()=>{
         document.getElementById("load-time").innerHTML = entry.duration;
     }, 0);
 };
-let cursor = true;
-let speed = 500;
-setInterval(() => {
-    document.getElementById('cursor').style.opacity = +cursor;
-    cursor = !cursor;
-}, speed);
 
 
 const filename_regex = /^[a-zA-Z0-9_\-*()£$!?]+\.[a-zA-Z0-9]+$/
