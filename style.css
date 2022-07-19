@@ -8,7 +8,7 @@ body{
     font-family: 'Lucida Console', monospace;
 
 }
-#poppy-cult{
+.poppy-cult{
     color: #fff;
     text-align: center;
     -webkit-animation: glow 1s ease-in-out infinite alternate;
@@ -63,7 +63,7 @@ body{
     color: rgb(255, 154, 247)
 }
 
-#edit-panel{
+.edit-panel{
     display:none;
     position:absolute;
     width:75%;
@@ -72,10 +72,9 @@ body{
     left:12.5%;
     border:#fafafa 1px solid;
     flex-direction:column;
-    justify-content: center;
     align-items: center;
 }
-#edit-file{
+.edit-file{
     resize:none;
     width:100%;
     border:none;
@@ -88,7 +87,7 @@ body{
     color:#fafafa;
     font-size:16px;
 }
-#button-area{
+.button-area{
     display:flex;
     flex-direction:row;
     justify-content: center;

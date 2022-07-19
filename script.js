@@ -17,9 +17,10 @@ const filename_regex = /^[a-zA-Z0-9_\-*()£$!?]+\.[a-zA-Z0-9]+$/
 const dirname_regex = /^[a-zA-Z0-9_\-*()£$!?]+$/
 
 class FileSystemObject{
-    constructor(name, parent){
+    constructor(name, parent, permissions){
         this.name = name;
         this.parent = parent;
+        this.permissions = permissions;
     }
 
     path(){
@@ -39,10 +40,11 @@ class FileSystemObject{
 
 }
 class Directory extends FileSystemObject{
-    constructor(name, subdirectories = [], parent){
+    constructor(name, subdirectories = [], parent, permissions = []){
         super(name, parent);
-        this.subdirectories = subdirectories
+        this.subdirectories = subdirectories;
         for(let dir of this.subdirectories) dir.parent = this;
+        this.permissions = permissions;
     }
 
     add(obj){
@@ -92,26 +94,45 @@ class Directory extends FileSystemObject{
 
 }
 class FileObj extends FileSystemObject{
-    constructor(name, content = "", parent){
+    constructor(name, content = "", parent, permissions=[]){
         super(name, parent);
         this.content = content;
+        this.permissions = permissions;
     }
 }
 
 const root = new Directory("~", [                    
-    new Directory("documents", [new FileObj("about.txt", "All about me!"), new FileObj("this.txt", "All about this...")]),
-    new FileObj("changelog.txt", "\
-        <strong>patch v0.1.7</strong><br>Fixed some bugs with file paths with help from the members of <span id='poppy-cult'>Poppy's Cult</span><br><br><br>\
-        <strong>patch v0.1.6</strong><br>File paths now added! Try: <span class=\"cmd\">edit</span> documents/about.txt!<br><br><br>\
-        <strong>patch v0.1.5</strong><br>CRT filter added! Looks neat!<br><br><br>\
-        <strong>patch v0.1.4</strong><br>Github! Now hosted on github pages!<br><br><br>\
-        <strong>patch v0.1.3</strong><br>Big update! Removed the command <span class=\"cmd\">inp</span> for the way better command <span class=\"cmd\">edit</span><br><br><br>\
-        <strong>patch v0.1.2</strong><br>Updated the code for cleanliness and ease of use! File/Folder objects should be much easier to use!<br><br><br>\
-        <strong>patch v0.1.1</strong><br>Can now edit and create files and directories, use the <span class=\"cmd\">mk, new</span> and <span class=\"cmd\">inp</span> commands to create!<br><br><br> \
-        <strong>patch v0.1.0</strong><br>Basic filesystem created and traversable, use the <span class=\"cmd\">cat, cd</span> and <span class=\"cmd\">ls</span> commands to traverse!"
-    ),
+    new Directory("articles", [new FileObj("about.txt", "All about me!", undefined, ['EDIT']), new FileObj("this.txt", "All about this...", undefined, ['EDIT'])]),
+    new FileObj("changelog.txt",
+`<strong>patch v0.1.8</strong>
+<br>Added <span class="cmd">code</span> command now to view and edit source code of files! Now <span class="cmd">edit</span> views (and edits) text only but with HTML styling applied. Check it out on the <span class="file">changelog.txt</span><br><br><br>
+
+<strong>patch v0.1.7</strong>
+<br>Fixed some bugs with file paths with help from the members of <span class='poppy-cult'>Poppy's Cult</span><br><br><br>
+    
+<strong>patch v0.1.6</strong>
+<br>File paths now added! Try: <span class="cmd">edit</span> documents/about.txt!<br><br><br>  
+          
+<strong>patch v0.1.5</strong>
+<br>CRT filter added! Looks neat!<br><br><br>        
+    
+<strong>patch v0.1.4</strong>
+<br>Github! Now hosted on github pages!<br><br><br>  
+          
+<strong>patch v0.1.3</strong>
+<br>Big update! Removed the command <span class="cmd">inp</span> for the way better command <span class="cmd">edit</span><br><br><br>        
+    
+<strong>patch v0.1.2</strong>
+<br>Updated the code for cleanliness and ease of use! File/Folder objects should be much easier to use!<br><br><br>        
+    
+<strong>patch v0.1.1</strong>
+<br>Can now edit and create files and directories, use the <span class="cmd">mk, new</span> and <span class="cmd">inp</span> commands to create!<br><br><br>         
+    
+<strong>patch v0.1.0</strong><br>Basic filesystem created and traversable, use the <span class="cmd">cat, cd</span> and <span class="cmd">ls</span> commands to traverse!`,
+    undefined, ['DELETE']),
     new Directory("pictures", [new FileObj("kitten.jpg", "Images aren't supported rn :(")])
 ], null);
+
 let current_dir = root;
 let editing_file = false;
 let current_file = null;
@@ -125,19 +146,19 @@ let command_list = {
         else{
             let dir = current_dir.from_path(x[0]);
             if (dir instanceof Directory) return dir.display();
-            return "could not find folder '"+x[0]+"'";
+            return "Could not find folder '"+x[0]+"'";
         }
     },
     "cat":(x)=>{
         let file = current_dir.from_path(x[0]);
         if (file instanceof FileObj) return file.content; 
-        return "could not find file '"+x[0]+"'";
+        return "Could not find file '"+x[0]+"'";
     },
     "cd":(x)=>{
         if(x[0]==undefined) return "";
         let dir = current_dir.from_path(x[0]);
         if (dir instanceof Directory) current_dir = dir;
-        else return "could not find folder '"+x[0]+"'";
+        else return "Could not find folder '"+x[0]+"'";
         return "";
     },
     "mk":(x)=>{
@@ -145,30 +166,57 @@ let command_list = {
         let obj = current_dir.from_path(x[0], true);
         if (!obj) return x[0].split("/").pop().join("/")+" could not be resolved as a directory.";
         if (obj[1] != undefined) dirname = obj[1];
-        if (!dirname_regex.test(dirname)) return "invalid directory name.";
-        if (obj[0].find(obj[1])) return "an object, " + obj[0].find(obj[1]).show() + ", already exists.";
-        return "directory " + obj[0].add(new Directory(dirname)).show() + " successfully created";
+        if (!dirname_regex.test(dirname)) return "Invalid directory name.";
+        if (obj[0].find(obj[1])) return "An object, " + obj[0].find(obj[1]).show() + ", already exists.";
+        return "Directory " + obj[0].add(new Directory(dirname, undefined, undefined, ['DELETE', 'MOVE'])).show() + " successfully created";
     },
     "new":(x)=>{
         let filename = x[0];
         let obj = current_dir.from_path(x[0], true);
         if (!obj) return x[0].split("/").pop().join("/")+" could not be resolved as a directory.";
         if (obj[1] != undefined) filename = obj[1];
-        if (!filename_regex.test(filename)) return "invalid file name.";
-        if (obj[0].find(obj[1])) return "an object, " + obj[0].find(obj[1]).show() + ", already exists";
-        return "file " + obj[0].add(new FileObj(obj[1])).show() + " successfully created."
+        if (!filename_regex.test(filename)) return "Invalid file name.";
+        if (obj[0].find(obj[1])) return "An object, " + obj[0].find(obj[1]).show() + ", already exists";
+        return "file " + obj[0].add(new FileObj(obj[1], undefined, undefined, ['EDIT', 'DELETE', 'MOVE'])).show() + " successfully created."
     },
     "edit":(x)=>{
-        if(x.length == 0) return "a filename is required."
+        if(x.length == 0) return "A filename is required.";
         let filename = x.shift();
         let file = current_dir.from_path(filename);
-        if (!(file instanceof FileObj)) return "could not find file '"+filename+"'";
+        if (!(file instanceof FileObj)) return "Could not find file '"+filename+"'";
         current_file = file; editing_file = true;
-        document.getElementById("edit-panel").style.display = "flex";
-        document.getElementById("edit-file").value = file.content;
-        document.getElementById("edit-file").focus();
+        document.getElementById("edit").style.display = "flex";
+        document.getElementById("edit-dialogue").innerHTML = file.content;
+        document.getElementById("edit-dialogue").contentEditable = file.permissions.includes("EDIT");
+        if(!file.permissions.includes("EDIT")) document.getElementById("write-btn").style.display = "none"; 
+        else document.getElementById("write-btn").style.display = "inherit";
+        document.getElementById("edit-dialogue").focus();
         return "";
     },
+    "code":(x)=>{
+        if(x.length == 0) return "A filename is required.";
+        let filename = x.shift();
+        let file = current_dir.from_path(filename);
+        if (!(file instanceof FileObj)) return "Could not find file '"+filename+"'";
+        current_file = file; editing_file = true;
+        document.getElementById("code").style.display = "flex";
+        document.getElementById("code-dialogue").value = file.content;
+        document.getElementById("code-dialogue").readOnly = !file.permissions.includes("EDIT");
+        if(!file.permissions.includes("EDIT")) document.getElementById("write-btn-code").style.display = "none"; 
+        else document.getElementById("write-btn-code").style.display = "inherit";
+        document.getElementById("code-dialogue").focus();
+        return ""; 
+    },
+    "rm":(x)=>{
+        if(x.length == 0) return "A file/directory name is required.";
+        let filename = x.shift();
+        let file = current_dir.from_path(filename);
+        if(!file) "Could not find file/directory '"+filename+"'";
+        if(!file.permissions.includes("DELETE")) return "You do not have permission to delete " + file.show() + ".";
+        idx = file.parent.subdirectories.findIndex(el=>el.name==file.name);
+        file.parent.subdirectories.splice(idx, 1);
+        return "Successfully deleted " + file.show() + ".";
+    }
     
 }
 
@@ -176,21 +224,25 @@ let command_list = {
 function close_file(){
     editing_file = false;
     current_file = null;
-    document.getElementById("edit-panel").style.display = "none";
+    document.getElementById("edit").style.display = "none";
+    document.getElementById("code").style.display = "none";
 }
 
 function save_file(){
     editing_file = false;
-    document.getElementById("edit-panel").style.display = "none";
-    current_file.content = document.getElementById("edit-file").value;
+    document.getElementById("edit").style.display = "none";
+    current_file.content = document.getElementById("edit-file").innerHTML;
     current_file = null;
 }
 
-function phonefocus(){
-    if (phone_focused) document.getElementById("phone-focus").blur()
-    else document.getElementById("phone-focus").focus()
-    phone_focused = !phone_focused;
+function code_file(){
+    editing_file = false;
+    document.getElementById("code").style.display = "none";
+    current_file.content = document.getElementById("code-dialogue").value;
+    current_file = null;
 }
+
+/* Key handling/input handling */
 let in_before = document.getElementById("typed-before");
 let in_after = document.getElementById("typed-after");
 let last_command = ""
