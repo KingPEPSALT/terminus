@@ -126,6 +126,7 @@ let command_list = {
     },
     "changelog":()=>
         "\
+        <strong>patch v0.1.5</strong><br>CRT filter added! Looks neat!<br><br><br>\
         <strong>patch v0.1.4</strong><br>Github! Now hosted on github pages!<br><br><br>\
         <strong>patch v0.1.3</strong><br>Big update! Removed the command <span class=\"cmd\">inp</span> for the way better command <span class=\"cmd\">edit</span><br><br><br>\
         <strong>patch v0.1.2</strong><br>Updated the code for cleanliness and ease of use! File/Folder objects should be much easier to use!<br><br><br>\
