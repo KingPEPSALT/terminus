@@ -67,7 +67,7 @@ class Directory extends FileSystemObject{
         path = path.trim();
         let cursor = this;
         if (path.startsWith("~")) cursor = root;
-        let arr_path = path.split("/");
+        let arr_path = path.split(/\\|\//);
         let target = arr_path.pop();
         for(let dir of arr_path){
             if (dir === ".") continue;

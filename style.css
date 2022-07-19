@@ -41,14 +41,12 @@ body{
 
 #cursor{
     color:#fafafa;
-    -webkit-animation: cursor-opacity 0.5s steps(1) infinite alternate;
-    -moz-animation: cursor-opacity 0.5s steps(1) step-end infinite alternate;
-    animation: cursor-opacity 0.5s steps(1) step-end infinite alternate;
+    -webkit-animation: cursor-opacity 1s steps-start infinite;
+    -moz-animation: cursor-opacity 1s step-start infinite;
+    animation: cursor-opacity 1s step-start infinite;
 }
 @keyframes cursor-opacity {
-    0% { opacity: 0; }
-    50%{ opacity: 1; }
-    100%{opacity: 0; }
+    50%{ opacity: 0; }
 }
 
 .cmd{
