@@ -14,7 +14,7 @@ body{
     width: 100%;
     height:100%;
     z-index: 9999;
-    background-image: url('crt.apng');
+    background-image: url('./crt.apng');
     background-size: 2px 1px;
     background-color: white;
     background-blend-mode:exclusion;
