@@ -223,7 +223,7 @@ const root = new Directory("~", [
 <br>Added <span class="cmd">code</span> command now to view and edit source code of files! Now <span class="cmd">edit</span> views (and edits) text only but with HTML styling applied. Check it out on the <span class="file">changelog.txt</span><br><br><br>
 
 <strong>patch v0.1.7</strong>
-<br>Fixed some bugs with file paths with help from the members of <span class='poppy-cult'>Poppy's Cult</span><br><br><br>
+<br>Fixed some bugs with file paths!<br><br><br>
     
 <strong>patch v0.1.6</strong>
 <br>File paths now added! Try: <span class="cmd">edit</span> documents/about.txt!<br><br><br>  
