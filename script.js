@@ -15,7 +15,6 @@ window.onload = ()=>{
 
 const filename_regex = /^[a-zA-Z0-9_\-()£$!]+(\.[a-zA-Z0-9]+){0,1}$/
 const dirname_regex = /^[a-zA-Z0-9_\-()£$!.]+$/
-
 class FileSystemObject{
     constructor(name, parent, permissions){
         this.name = name;
@@ -68,9 +67,16 @@ class Directory extends FileSystemObject{
         if(path == undefined) return null;
         path = path.trim();
         let cursor = this;
-        if (path.startsWith("~")) cursor = root;
         let arr_path = path.split(/\\|\//);
+        if (arr_path[0] == "~"){
+            arr_path.shift();
+            while(cursor.name != "~")
+                cursor = cursor.parent;
+        }
+        if(!cursor) return null;
+        if(arr_path.length == 0) return cursor;
         let target = arr_path.pop();
+        
         for(let dir of arr_path){
             if (dir === ".") continue;
             if (dir === "..") {
@@ -79,11 +85,11 @@ class Directory extends FileSystemObject{
                 continue;
             };
             let next = cursor.find(dir);
-            if (cursor === null) return null;
+            if (!cursor) return null;
             if (next instanceof FileObj) return null;
             cursor = next;
         }
-        if (cursor === null) return null;
+        if (!cursor) return null;
         if (to_make) return [cursor, target];
         else return cursor.find(target)
     }
@@ -102,53 +108,31 @@ class FileObj extends FileSystemObject{
 }
 
 class Command{
-    constructor(name, func, description, requires_args=false, man_page = undefined){
+    constructor(name, func, description, requires_args=false){
         this.name = name;
         this.func = func;
         this.description = description;
         this.requires_args = requires_args;
-        this.man_page = man_page;
     }
 }
-
-const root = new Directory("~", [                    
-    new Directory("articles", [new FileObj("about.txt", "All about me!", undefined, ['EDIT']), new FileObj("this.txt", "All about this...", undefined, ['EDIT'])]),
-    new FileObj("changelog.txt",
-`<strong>patch v0.1.8</strong>
-<br>Added <span class="cmd">code</span> command now to view and edit source code of files! Now <span class="cmd">edit</span> views (and edits) text only but with HTML styling applied. Check it out on the <span class="file">changelog.txt</span><br><br><br>
-
-<strong>patch v0.1.7</strong>
-<br>Fixed some bugs with file paths with help from the members of <span class='poppy-cult'>Poppy's Cult</span><br><br><br>
-    
-<strong>patch v0.1.6</strong>
-<br>File paths now added! Try: <span class="cmd">edit</span> documents/about.txt!<br><br><br>  
-          
-<strong>patch v0.1.5</strong>
-<br>CRT filter added! Looks neat!<br><br><br>        
-    
-<strong>patch v0.1.4</strong>
-<br>Github! Now hosted on github pages!<br><br><br>  
-          
-<strong>patch v0.1.3</strong>
-<br>Big update! Removed the command <span class="cmd">inp</span> for the way better command <span class="cmd">edit</span><br><br><br>        
-    
-<strong>patch v0.1.2</strong>
-<br>Updated the code for cleanliness and ease of use! File/Folder objects should be much easier to use!<br><br><br>        
-    
-<strong>patch v0.1.1</strong>
-<br>Can now edit and create files and directories, use the <span class="cmd">mk, new</span> and <span class="cmd">inp</span> commands to create!<br><br><br>         
-    
-<strong>patch v0.1.0</strong><br>Basic filesystem created and traversable, use the <span class="cmd">cat, cd</span> and <span class="cmd">ls</span> commands to traverse!`,
-    undefined, ['DELETE']),
-], null);
-
-let current_dir = root;
-let editing_file = false;
-let current_file = null;
-let phone_focused = false
-
 let command_list = new Map([
-
+    ["help", new Command("help", (args)=>{
+        let specified_cmd = args.shift();
+        let out = ""
+        if(specified_cmd == undefined){
+            out = "List of commands:<br>";
+            for(const cmd of command_list.values()){
+                out += "<br><span class='cmd'>"+cmd.name+"</span> - " + cmd.description;
+            }
+            out +="<br><br> Type <span class='cmd'>help</span> [command name] for a brief description of a command"
+        }else{
+            let elaborated_cmd = command_list.get(specified_cmd);
+            if(elaborated_cmd == undefined)
+                out = "That is not a valid command. Type <span class='cmd'>help</span> [command name] for a brief description of a command or <span class='cmd'>help</span> for a list of commands.";
+            else out = open_file_window("~/sys/manuals/"+elaborated_cmd.name+".man", true) ? "" : "A manual page could not be found for <span class='cmd'>"+elaborated_cmd.name+"</span>";
+        }
+        return out;
+    }, "provides info on the commands")],
     ["echo", new Command("echo", (args)=>{return args.join(" ")}, "outputs the input")],
 
     ["clear", new Command("clear", (args)=>{document.getElementById("history").innerHTML=""}, "clears the terminal")],
@@ -200,31 +184,13 @@ let command_list = new Map([
     }, "creates a new file", true)],
 
     ["edit", new Command("edit", (args)=>{
-        let filename = args.shift();
-        let file = current_dir.from_path(filename);
-        if (!(file instanceof FileObj)) return "Could not find file '"+filename+"'";
-        current_file = file; editing_file = true;
-        document.getElementById("edit").style.display = "flex";
-        document.getElementById("edit-dialogue").innerHTML = file.content;
-        document.getElementById("edit-dialogue").contentEditable = file.permissions.includes("EDIT");
-        if(!file.permissions.includes("EDIT")) document.getElementById("write-btn").style.display = "none"; 
-        else document.getElementById("write-btn").style.display = "inherit";
-        document.getElementById("edit-dialogue").focus();
-        return "";
+        let res = open_file_window(args.shift(), true);
+        return res ? "" : "Could not find file.";
     }, "opens an existing file in an edit window with styling", true)],
 
     ["code", new Command("code", (args)=>{
-        let filename = args.shift();
-        let file = current_dir.from_path(filename);
-        if (!(file instanceof FileObj)) return "Could not find file '"+filename+"'";
-        current_file = file; editing_file = true;
-        document.getElementById("code").style.display = "flex";
-        document.getElementById("code-dialogue").value = file.content;
-        document.getElementById("code-dialogue").readOnly = !file.permissions.includes("EDIT");
-        if(!file.permissions.includes("EDIT")) document.getElementById("write-btn-code").style.display = "none"; 
-        else document.getElementById("write-btn-code").style.display = "inherit";
-        document.getElementById("code-dialogue").focus();
-        return ""; 
+        let res = open_file_window(args.shift(), false);
+        return res ? "" : "Could not find file."; 
     }, "opens an existing file in an edit window without styling, source is shown", true)],
 
     ["rm", new Command("rm", (args)=>{
@@ -239,6 +205,89 @@ let command_list = new Map([
 
 ]);
 
+function gen_manual_header(cmd, usage, content){
+    return new FileObj(cmd.name+".man", 
+`<div class="manual-head">${cmd.name} MANUAL PAGE</div><br>
+USAGE: <span class="cmd">${cmd.name}</span> ${usage}<br><br>
+${content}
+`)
+}
+
+const root = new Directory("~", [                    
+    new Directory("articles", [new FileObj("about.txt", "All about me!", undefined, ['EDIT']), new FileObj("this.txt", "All about this...", undefined, ['EDIT'])]),
+    new FileObj("changelog.txt",  
+`<strong> patch v0.1.9</strong>
+<br>Manual pages now added! Type '<span class="cmd">help</span> help' for more info!
+
+<strong>patch v0.1.8</strong>
+<br>Added <span class="cmd">code</span> command now to view and edit source code of files! Now <span class="cmd">edit</span> views (and edits) text only but with HTML styling applied. Check it out on the <span class="file">changelog.txt</span><br><br><br>
+
+<strong>patch v0.1.7</strong>
+<br>Fixed some bugs with file paths with help from the members of <span class='poppy-cult'>Poppy's Cult</span><br><br><br>
+    
+<strong>patch v0.1.6</strong>
+<br>File paths now added! Try: <span class="cmd">edit</span> documents/about.txt!<br><br><br>  
+          
+<strong>patch v0.1.5</strong>
+<br>CRT filter added! Looks neat!<br><br><br>        
+    
+<strong>patch v0.1.4</strong>
+<br>Github! Now hosted on github pages!<br><br><br>  
+          
+<strong>patch v0.1.3</strong>
+<br>Big update! Removed the command <span class="cmd">inp</span> for the way better command <span class="cmd">edit</span><br><br><br>        
+    
+<strong>patch v0.1.2</strong>
+<br>Updated the code for cleanliness and ease of use! File/Folder objects should be much easier to use!<br><br><br>        
+    
+<strong>patch v0.1.1</strong>
+<br>Can now edit and create files and directories, use the <span class="cmd">mk, new</span> and <span class="cmd">inp</span> commands to create!<br><br><br>         
+    
+<strong>patch v0.1.0</strong><br>Basic filesystem created and traversable, use the <span class="cmd">cat, cd</span> and <span class="cmd">ls</span> commands to traverse!`,
+    undefined, ['DELETE']),
+    new Directory("sys", [new Directory("manuals",[
+        /* Command manuals */
+        gen_manual_header(command_list.get("help"), "[command: OPTIONAL]", "The <span class='cmd'>help</span> command can either, when presented with no arugments, list all commands with a brief description, or it can present a more detailed description and usage of the command using the manual pages found in <span class='dir'>~/sys/manual</span>."),
+        gen_manual_header(command_list.get("echo"), "[args: OPTIONAL]", "The <span class='cmd'>echo</span> command will print out it's input to the terminal raw, meaning no styling."),
+        gen_manual_header(command_list.get("clear"), "", "The <span class='cmd'>clear</span> command will clear the terminal's displayed command history only and not the info text."),
+        gen_manual_header(command_list.get("ls"), "[existing directory: OPTIONAL]", "The <span class='cmd'>ls</span> command will list all file system objects within a directory. When no directory is presented as an argument, the current directory is used instead."),
+        gen_manual_header(command_list.get("cat"), "[existing file: REQUIRED]", "The <span class='cmd'>cat</span> command will print the stylised outputs of a file directly into the terminal."),
+        gen_manual_header(command_list.get("cd"), "[existing directory: OPTIONAL]", "The <span class='cmd'>cd</span> command will change the current directory to that which was input. When no directory is presented as an argument, the current directory is printed to the terminal instead."),
+        gen_manual_header(command_list.get("mk"), "[new directory: REQUIRED]", "The <span class='cmd'>mk</span> command will create a new directory named by the argument, the argument can also be a path to the potentially new directory however only one file system object can be created at a time so the path must exist up until the last object in the path."),
+        gen_manual_header(command_list.get("new"), "[new file: REQUIRED]", "The <span class='cmd'>new</span> command will create a new file named by the argument, the argument can also be a path to the potentially new directory however only one file system object can be created at a time so the path must exist up until the last object in the path."),
+        gen_manual_header(command_list.get("edit"), "[existing file: REQUIRED]", "The <span class='cmd'>edit</span> command will open a stylised window with the file content displayed, if the file is not readonly, one can edit this text and save the file."),
+        gen_manual_header(command_list.get("code"), "[existing file: REQUIRED]", "The <span class='cmd'>code</span> command will open a non-stylised window with the file content displayed, this means that the source of stylised files can be seen. If the file is not readonly, one can edit the source of the file and even view style changes with the <span class='cmd'>cat</span> or <span class='cmd'>edit</span> commands."),
+        gen_manual_header(command_list.get("rm"), ["existing file/directory: REQUIRED"], "The <span class='cmd'>rm</span> command will delete a directory or file that has the DELETE permission enabled, note that it will also delete everything within the directory.")
+    ])])
+], null);
+
+let current_dir = root;
+let editing_file = false;
+let current_file = null;
+let phone_focused = false
+
+function open_file_window(filepath, style){
+    let f = current_dir.from_path(filepath);
+    if (!(f instanceof FileObj)) return false;
+    current_file = f; editing_file = true;
+    let panel_type = style ? "edit" : "code";
+    /*
+    I don't know why this fixes the issue I was having but I have an idea
+    It seems that for some reason my browser sometimes skips this code, or the style gets reset instantly or something wacky.
+    Putting this on a timer that is basically unoticeable seems to ensure that it is actually run 
+    */
+    setTimeout(()=> {
+        document.getElementById(panel_type).style.display = "flex";
+        let dialogue = document.getElementById(panel_type+"-dialogue");
+        if(style){ dialogue.innerHTML = f.content; dialogue.contentEditable = f.permissions.includes("EDIT");}
+        else { dialogue.value = file.content; dialogue.readOnly = !f.permissions.includes("EDIT"); }
+        document.getElementById("write-btn-"+panel_type).style.display = f.permissions.includes("EDIT") ? "inherit" : "none";
+        dialogue.focus();
+    }, 20);
+    return true;
+    
+}
+
 /*ON-CLICK FUNCS*/
 function close_file(){
     editing_file = false;
@@ -250,7 +299,7 @@ function close_file(){
 function save_file(){
     editing_file = false;
     document.getElementById("edit").style.display = "none";
-    current_file.content = document.getElementById("edit-file").innerHTML;
+    current_file.content = document.getElementById("edit-dialogue").innerHTML;
     current_file = null;
 }
 
@@ -274,24 +323,9 @@ document.addEventListener('keydown', (e)=>{
         let command = command_list.get(typed_command);
         document.getElementById("history").innerHTML+= "<span class='dir'>"+current_dir.path() + "</span> $ " + typed_command + " " + inp.join(" ")
         let output = "";
-        if (command == undefined && typed_command != "help" && typed_command!="") output = "'" + typed_command + "' is not a valid command. Type <span class='cmd'>help</span> for a list of commands.";
-        else if (typed_command=="help") {
-            let specified_cmd = inp.shift();
-            if(specified_cmd == undefined){
-                output = "List of commands:<br><br><span class='cmd'>help</span>";
-                for(const cmd of command_list.values()){
-                    output += "<br><span class='cmd'>"+cmd.name+"</span>";
-                }
-                output +="<br><br> Type <span class='cmd'>help</span> [command name] for a brief description of a command"
-            }else{
-                let elaborated_cmd = command_list.get(specified_cmd);
-                if(elaborated_cmd == undefined)
-                    output = "That is not a valid command. Type <span class='cmd'>help</span> [command name] for a brief description of a command or <span class='cmd'>help</span> for a list of commands.";
-                else output = "<span class='cmd'>"+elaborated_cmd.name+"</span> - " + elaborated_cmd.description;
-            }
-        }else if(typed_command == ""){
-            output="";
-        }
+        if (typed_command == "") output="";
+        else if (command == undefined) output = "'" + typed_command + "' is not a valid command. Type <span class='cmd'>help</span> for a list of commands.";
+        else if (typed_command == "") output="";
         else{
             if(command.requires_args && inp.join(" ").trim().length == 0) output = "Command <span class='cmd'>"+command.name+"</span> requires args. Type <span class='cmd'>help</span> "+command.name+" for more info.";
             else output = command.func(inp);

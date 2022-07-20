@@ -110,3 +110,9 @@ body{
 .file-button:hover{
     cursor:pointer;
 }
+.manual-head{
+    background-color: #fafafa;
+    color:#000;
+    width:100%;
+    text-align: center;
+}
