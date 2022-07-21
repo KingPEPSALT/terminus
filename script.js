@@ -4,7 +4,7 @@ String.prototype.insertChar=function(chr,pos){
 String.prototype.removeAt=function(pos){
     this.slice(0, pos) + this.slice(pos+1);
 }
-
+document.scrollingElement.scroll(0, 1); //force scroll at start so it stays pinned
 const [entry] = performance.getEntriesByType("navigation");
 window.onload = ()=>{
     setTimeout(()=>{
@@ -280,7 +280,7 @@ function open_file_window(filepath, style){
         document.getElementById(panel_type).style.display = "flex";
         let dialogue = document.getElementById(panel_type+"-dialogue");
         if(style){ dialogue.innerHTML = f.content; dialogue.contentEditable = f.permissions.includes("EDIT");}
-        else { dialogue.value = file.content; dialogue.readOnly = !f.permissions.includes("EDIT"); }
+        else { dialogue.value = f.content; dialogue.readOnly = !f.permissions.includes("EDIT"); }
         document.getElementById("write-btn-"+panel_type).style.display = f.permissions.includes("EDIT") ? "inherit" : "none";
         dialogue.focus();
     }, 20);
@@ -292,21 +292,13 @@ function open_file_window(filepath, style){
 function close_file(){
     editing_file = false;
     current_file = null;
-    document.getElementById("edit").style.display = "none";
-    document.getElementById("code").style.display = "none";
+    [...document.getElementsByClassName("edit-panel")].forEach((el)=>el.style.display = "none");
 }
 
-function save_file(){
+function save_file(stylised){
     editing_file = false;
-    document.getElementById("edit").style.display = "none";
-    current_file.content = document.getElementById("edit-dialogue").innerHTML;
-    current_file = null;
-}
-
-function code_file(){
-    editing_file = false;
-    document.getElementById("code").style.display = "none";
-    current_file.content = document.getElementById("code-dialogue").value;
+    document.getElementById(stylised ? "edit" : "code").style.display = "none";
+    current_file.content = stylised ? document.getElementById("edit-dialogue").innerHTML : document.getElementById("code-dialogue").value;
     current_file = null;
 }
 
@@ -333,7 +325,7 @@ document.addEventListener('keydown', (e)=>{
         if (typed_command != "clear") document.getElementById("history").innerHTML += "<br>" + output + (output.length==0 ? "":"<br>") + "<br>";
         in_before.innerHTML=""; in_after.innerHTML="";
         document.getElementById("cur-dir").innerHTML = current_dir.path();
-        last_command = command;
+        last_command = typed_command;
         if(inp != "") last_command += " " + inp;
     }
     else if (e.key == "Backspace"){

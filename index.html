@@ -26,17 +26,18 @@
     <div class="edit-panel" id="edit">
         <div contenteditable="true" class="edit-file" id="edit-dialogue"></div>
         <div class="button-area">
-            <input type="button" value="write file" onclick="save_file()" class="file-button" id="write-btn-edit">
+            <input type="button" value="write file" onclick="save_file(true)" class="file-button" id="write-btn-edit">
             <input type="button" value="close file" onclick="close_file()" class="file-button">
         </div>
     </div>
     <div class="edit-panel" id="code">
         <textarea class="edit-file" id="code-dialogue"></textarea>
         <div class="button-area">
-            <input type="button" value="write file" onclick="code_file()" class="file-button" id="write-btn-code">
+            <input type="button" value="write file" onclick="save_file(false)" class="file-button" id="write-btn-code">
             <input type="button" value="close file" onclick="close_file()" class="file-button">
         </div>
     </div>
     <script src="script.js" type="text/javascript" defer></script>
+    <div id="scrl-anchor"></div>
 </body>
 </html>
