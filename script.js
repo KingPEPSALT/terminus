@@ -8,7 +8,7 @@ document.scrollingElement.scroll(0, 1); //force scroll at start so it stays pinn
 const [entry] = performance.getEntriesByType("navigation");
 window.onload = ()=>{
     setTimeout(()=>{
-        document.getElementById("load-time").innerHTML = entry.duration;
+        document.getElementById("load-time").innerHTML = Math.round(entry.duration);
     }, 0);
 };
 
