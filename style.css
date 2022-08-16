@@ -44,7 +44,7 @@ body *{
     width: 100%;
     height:100%;
     z-index: 9999;
-    background-image: url('./crt.apng');
+    background-image: url('./res/crt.apng');
     background-size: 2px 1px;
     background-color: white;
     background-blend-mode:exclusion;
@@ -128,4 +128,62 @@ body *{
     color:#000;
     width:100%;
     text-align: center;
+}
+
+#settings-modal {
+    display:flex;
+    flex-direction: column;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 300px;
+    height: 300px;
+    align-items:flex-end;
+}
+#settings-modal-button {
+    outline: none;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    border: 1px solid white;
+    background: #000;
+    margin-bottom: 5px;
+}
+#settings-modal-button-image {
+    outline: none;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    border: 1px solid white;
+    background: #000;
+}
+#settings-modal-content {
+    padding:15px;
+    visibility: hidden;
+    border: 1px solid white;
+}
+.slider-label-align{
+    display:flex;
+    flex-direction: row;
+    align-items:center;
+    gap:0.5em;
+}
+.settings-range{
+    -webkit-appearance: none;
+    outline:none;
+    height: 1.5em;
+    background: #000;
+    overflow: hidden;
+}
+.settings-range::-moz-range-track{
+    height: 0.5em;
+    background: #fff;
+}
+.settings-range::-moz-range-thumb{
+    -webkit-appearance: none;
+    height:1.5em;
+    width:0.5em;
+    
+    background: white;
+    border-radius:0px;
 }

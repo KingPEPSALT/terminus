@@ -10,6 +10,9 @@ window.onload = ()=>{
     setTimeout(()=>{
         document.getElementById("load-time").innerHTML = Math.round(entry.duration);
     }, 0);
+    let crtSlider = document.getElementById("crt-range");
+    document.getElementById("crt-readout").innerHTML = (crtSlider.value/10).toFixed(1);
+    document.getElementById("crt-filter").style.opacity = String(crtSlider.value/10);
 };
 
 
@@ -215,9 +218,12 @@ ${content}
 
 const root = new Directory("~", [                    
     new Directory("articles", [new FileObj("about.txt", "All about me!", undefined, ['EDIT']), new FileObj("this.txt", "All about this...", undefined, ['EDIT'])]),
-    new FileObj("changelog.txt",  
-`<strong> patch v0.1.9</strong>
-<br>Manual pages now added! Type '<span class="cmd">help</span> help' for more info!
+    new FileObj("changelog.txt", 
+`<strong>patch v0.1.10</strong>
+<br>Settings panel created and CRT slider added, seems that UBlock Origin blocks this slider from working<br><br><br>
+
+<strong>patch v0.1.9</strong>
+<br>Manual pages now added! Type '<span class="cmd">help</span> help' for more info!<br><br><br>  
 
 <strong>patch v0.1.8</strong>
 <br>Added <span class="cmd">code</span> command now to view and edit source code of files! Now <span class="cmd">edit</span> views (and edits) text only but with HTML styling applied. Check it out on the <span class="file">changelog.txt</span><br><br><br>
@@ -302,12 +308,13 @@ function save_file(stylised){
     current_file = null;
 }
 
+
 /* Key handling/input handling */
 let in_before = document.getElementById("typed-before");
 let in_after = document.getElementById("typed-after");
 let last_command = ""
 document.addEventListener('keydown', (e)=>{
-    if (["/", "'"].includes(e.key)) e.preventDefault();
+    if (["/", "'"].includes(e.key) && !editing_file) e.preventDefault();
     if (editing_file) return;
     if (e.key == "Enter") {
         let inp = (in_before.innerHTML+in_after.innerHTML).trim().split(" ");
@@ -347,3 +354,13 @@ document.addEventListener('keydown', (e)=>{
         in_after.innerHTML = "";
     }
 })
+
+let toggleSettingsModal = () => {
+    let settings = document.getElementById("settings-modal-content");
+    settings.style.visibility = (settings.style.visibility === "visible") ? "hidden" : "visible";
+}
+
+document.getElementById("crt-range").oninput = function() {
+    document.getElementById("crt-readout").innerHTML = (this.value/10).toFixed(1);
+    document.getElementById("crt-filter").style.opacity = String(this.value/10);
+}

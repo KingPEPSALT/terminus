@@ -6,11 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>terminus</title>
     <link rel="stylesheet" href="style.css" type="text/css">
+
+    <script src="scripts/script.js" type="text/javascript" defer></script>
+
 </head>
 <body>
     <div id="crt-filter"></div>
     <div id="start-info">
-        Terminus v0.1.9 Copyright (c) Pepsalt.
+        Terminus v0.1.10a Copyright (c) Pepsalt.
         <br>
         <br>
         Loading took <span id="load-time"></span>ms.
@@ -37,7 +40,21 @@
             <input type="button" value="close file" onclick="close_file()" class="file-button">
         </div>
     </div>
-    <script src="script.js" type="text/javascript" defer></script>
+    <div id="settings-modal">
+        <div style="padding:0px;margin:0px">
+            <button value="" onclick="toggleSettingsModal()" id="settings-modal-button">
+                <img src="./res/settings_gear.png" id="settings-modal-button-img" width="24px" height="24px" style="margin-top:2px;">
+            </button>
+        </div>
+        <div id="settings-modal-content">
+            <div class="slider-label-align">
+                <label for="crt-range">CRT</label>
+                <input type="range" id="crt-range" class="settings-range" min="0" max="10" defaultValue="5">
+                <label for="crt-range" id="crt-readout">0.5</label>
+            </div>
+        </div>
+    </div>
+
     <div id="scrl-anchor"></div>
 </body>
 </html>
